@@ -1,0 +1,35 @@
+# Local credentials and Python / JavaScript environments
+.env
+.env.*
+!.env.example
+!.env.sample
+.venv/
+venv/
+.*venv*/
+node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+# Generated build and temporary files
+.vs/
+.gradle/
+build/
+cmake-build-*/
+tmp/
+temp/
+Thumbs.db
+.DS_Store
+
+# Native compilation outputs
+Debug/
+Release/
+*.obj
+*.pdb
+*.ilk
+*.pch
+*.ipch
+*.idb
