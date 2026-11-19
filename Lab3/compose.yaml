@@ -1,0 +1,46 @@
+name: soa-lab3
+services:
+  rabbitmq:
+    image: rabbitmq:4.1.0-management
+    environment:
+      RABBITMQ_DEFAULT_USER: student
+      RABBITMQ_DEFAULT_PASS: student
+    ports: ["127.0.0.1:15672:15672"]
+    volumes: ["rabbit-data:/var/lib/rabbitmq"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  profiles:
+    build: ./backend
+    environment: {ROLE: profiles}
+    volumes: ["profiles-data:/data"]
+  tracking:
+    build: ./backend
+    environment: {ROLE: tracking, RELIABLE: "1"}
+    volumes: ["tracking-data:/data"]
+    depends_on:
+      rabbitmq: {condition: service_healthy}
+  reporting:
+    build: ./backend
+    environment: {ROLE: reporting, RELIABLE: "1"}
+    volumes: ["reporting-data:/data"]
+    depends_on:
+      rabbitmq: {condition: service_healthy}
+  gateway:
+    build: ./backend
+    environment: {ROLE: gateway}
+    ports: ["127.0.0.1:8080:8000"]
+    depends_on: [profiles, tracking, reporting]
+volumes:
+  rabbit-data:
+  profiles-data:
+  tracking-data:
+  reporting-data:
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 10.205.3.0/24
