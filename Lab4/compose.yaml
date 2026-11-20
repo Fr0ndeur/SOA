@@ -1,0 +1,108 @@
+name: soa-lab4
+services:
+  rabbitmq:
+    image: rabbitmq:4.1.0-management
+    environment:
+      RABBITMQ_DEFAULT_USER: student
+      RABBITMQ_DEFAULT_PASS: student
+    ports:
+    - 127.0.0.1:15672:15672
+    volumes:
+    - rabbit-data:/var/lib/rabbitmq
+    healthcheck:
+      test:
+      - CMD
+      - rabbitmq-diagnostics
+      - -q
+      - ping
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  profiles:
+    build: ./backend
+    environment:
+      ROLE: profiles
+    volumes:
+    - profiles-data:/data
+  tracking:
+    build: ./backend
+    environment:
+      ROLE: tracking
+      RELIABLE: '1'
+    volumes:
+    - tracking-data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+  reporting:
+    build: ./backend
+    environment:
+      ROLE: reporting
+      RELIABLE: '1'
+    volumes:
+    - reporting-data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+  gateway:
+    build: ./backend
+    environment:
+      ROLE: gateway
+    ports:
+    - 127.0.0.1:8080:8000
+    depends_on:
+    - profiles
+    - tracking
+    - reporting
+  ai:
+    build: ./ai
+    profiles:
+    - tools
+    environment:
+      API_BASE_URL: http://gateway:8000
+      PRODUCER_URL: http://a2a-producer:8101
+      CONSUMER_URL: http://a2a-consumer:8102
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+  a2a-consumer:
+    build: ./ai
+    command:
+    - python
+    - a2a_agent.py
+    - --role
+    - consumer
+    - --port
+    - '8102'
+    environment:
+      API_BASE_URL: http://gateway:8000
+      CONSUMER_URL: http://a2a-consumer:8102
+    ports:
+    - 127.0.0.1:8102:8102
+    depends_on:
+    - gateway
+  a2a-producer:
+    build: ./ai
+    command:
+    - python
+    - a2a_agent.py
+    - --role
+    - producer
+    - --port
+    - '8101'
+    environment:
+      API_BASE_URL: http://gateway:8000
+      CONSUMER_URL: http://a2a-consumer:8102
+    ports:
+    - 127.0.0.1:8101:8101
+    depends_on:
+    - gateway
+    - a2a-consumer
+volumes:
+  rabbit-data: null
+  profiles-data: null
+  tracking-data: null
+  reporting-data: null
+networks:
+  default:
+    ipam:
+      config:
+      - subnet: 10.205.4.0/24
