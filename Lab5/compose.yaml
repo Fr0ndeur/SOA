@@ -1,0 +1,87 @@
+name: soa-lab5
+services:
+  rabbitmq:
+    image: rabbitmq:4.1.0-management
+    environment:
+      RABBITMQ_DEFAULT_USER: student
+      RABBITMQ_DEFAULT_PASS: student
+    ports:
+    - 127.0.0.1:15672:15672
+    volumes:
+    - rabbit-data:/var/lib/rabbitmq
+    healthcheck:
+      test:
+      - CMD
+      - rabbitmq-diagnostics
+      - -q
+      - ping
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  profiles:
+    build: ./backend
+    environment:
+      ROLE: profiles
+    volumes:
+    - profiles-data:/data
+  tracking:
+    build: ./backend
+    environment:
+      ROLE: tracking
+      RELIABLE: '1'
+    volumes:
+    - tracking-data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+  reporting:
+    build: ./backend
+    environment:
+      ROLE: reporting
+      RELIABLE: '1'
+    volumes:
+    - reporting-data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+  gateway:
+    build: ./security
+    ports:
+    - 127.0.0.1:8080:8000
+    environment:
+      JWT_ISSUER: http://localhost:8180/realms/soa
+      JWKS_URL: http://keycloak:8080/realms/soa/protocol/openid-connect/certs
+      JWT_AUDIENCE: soa-api
+      PROFILES_URL: http://profiles:8000
+      TRACKING_URL: http://tracking:8000
+      REPORTING_URL: http://reporting:8000
+    depends_on:
+    - keycloak
+    - profiles
+    - tracking
+    - reporting
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1
+    command:
+    - start-dev
+    - --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin-lab5
+      KC_HOSTNAME: http://localhost:8180
+    ports:
+    - 127.0.0.1:8180:8080
+    volumes:
+    - ./security/realms:/opt/keycloak/data/import:ro
+    - keycloak-data:/opt/keycloak/data
+volumes:
+  rabbit-data: null
+  profiles-data: null
+  tracking-data: null
+  reporting-data: null
+  keycloak-data: null
+networks:
+  default:
+    ipam:
+      config:
+      - subnet: 10.205.5.0/24

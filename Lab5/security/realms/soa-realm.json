@@ -1,0 +1,330 @@
+{
+  "realm": "soa",
+  "enabled": true,
+  "displayName": "SOA Lab 5",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "accessTokenLifespan": 300,
+  "roles": {
+    "realm": [
+      {
+        "name": "profile-reader"
+      },
+      {
+        "name": "tracking-reader"
+      },
+      {
+        "name": "tracking-writer"
+      },
+      {
+        "name": "reports-reader"
+      },
+      {
+        "name": "default-roles-soa",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "profile-reader",
+            "tracking-reader",
+            "reports-reader"
+          ]
+        }
+      }
+    ]
+  },
+  "defaultRole": {
+    "name": "default-roles-soa"
+  },
+  "users": [
+    {
+      "username": "user5",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "user5@example.test",
+      "firstName": "User5",
+      "lastName": "Demo",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "User5-demo!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "profile-reader",
+        "tracking-reader",
+        "tracking-writer",
+        "reports-reader"
+      ]
+    },
+    {
+      "username": "reader5",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "reader5@example.test",
+      "firstName": "Reader5",
+      "lastName": "Demo",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Reader5-demo!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "profile-reader",
+        "tracking-reader",
+        "reports-reader"
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "soa-browser",
+      "name": "SOA browser PKCE",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "fullScopeAllowed": false,
+      "redirectUris": [
+        "http://localhost:8080/"
+      ],
+      "webOrigins": [
+        "http://localhost:8080"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8080/"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "profile:read",
+        "tracking:read",
+        "tracking:write",
+        "reports:read"
+      ],
+      "protocolMappers": [
+        {
+          "name": "soa-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "soa-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "basic",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "consentRequired": false,
+          "config": {
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "profile",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "username",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "preferred_username",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "given name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "firstName",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "given_name",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "family name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "lastName",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "family_name",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    },
+    {
+      "name": "email",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "email",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "email",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "email verified",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "emailVerified",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "email_verified",
+            "jsonType.label": "boolean"
+          }
+        }
+      ]
+    },
+    {
+      "name": "profile:read",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "tracking:read",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "tracking:write",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "reports:read",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    }
+  ],
+  "scopeMappings": [
+    {
+      "clientScope": "profile:read",
+      "roles": [
+        "profile-reader"
+      ]
+    },
+    {
+      "clientScope": "tracking:read",
+      "roles": [
+        "tracking-reader"
+      ]
+    },
+    {
+      "clientScope": "tracking:write",
+      "roles": [
+        "tracking-writer"
+      ]
+    },
+    {
+      "clientScope": "reports:read",
+      "roles": [
+        "reports-reader"
+      ]
+    }
+  ],
+  "identityProviders": [
+    {
+      "alias": "campus-demo",
+      "displayName": "Навчальний зовнішній OIDC IdP",
+      "providerId": "oidc",
+      "enabled": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "firstBrokerLoginFlowAlias": "first broker login",
+      "config": {
+        "clientId": "soa-broker",
+        "clientSecret": "local-demo-broker-secret",
+        "authorizationUrl": "http://localhost:8180/realms/upstream/protocol/openid-connect/auth",
+        "tokenUrl": "http://keycloak:8080/realms/upstream/protocol/openid-connect/token",
+        "userInfoUrl": "http://keycloak:8080/realms/upstream/protocol/openid-connect/userinfo",
+        "logoutUrl": "http://localhost:8180/realms/upstream/protocol/openid-connect/logout",
+        "jwksUrl": "http://keycloak:8080/realms/upstream/protocol/openid-connect/certs",
+        "issuer": "http://localhost:8180/realms/upstream",
+        "validateSignature": "true",
+        "useJwksUrl": "true",
+        "defaultScope": "openid profile email",
+        "syncMode": "IMPORT",
+        "clientAuthMethod": "client_secret_post"
+      }
+    }
+  ]
+}

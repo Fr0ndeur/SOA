@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="uk">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ЛР5 — захищені API</title>
+<style>
+body{font:17px/1.5 system-ui;max-width:1000px;margin:3rem auto;padding:0 1.2rem;background:#f5f7fb;color:#172b46}section{background:white;border:1px solid #d5deeb;border-radius:12px;padding:1.3rem;margin:1rem 0}h1,h2{line-height:1.2}button,input{font:inherit;padding:.5rem .8rem;margin:.25rem;border:1px solid #b1bfd2;border-radius:6px}button{cursor:pointer;background:#173d75;color:white}button:disabled{opacity:.5;cursor:default}label{display:inline-block;margin:.35rem}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#eef2f8;padding:1rem;border-radius:6px}small{color:#526780}#status{font-weight:600}a{color:#174b91}
+</style>
+<h1>Безпека сервісних API</h1>
+<p>Keycloak · OAuth 2.0 Authorization Code · PKCE S256 · окремі scopes</p>
+<section>
+<h2>1. Увійти</h2>
+<p>Виберіть запитувані права. Сервер видає лише scopes, дозволені ролями користувача.</p>
+<div id="scopes">
+<label><input type="checkbox" value="profile:read" checked>profile:read</label>
+<label><input type="checkbox" value="tracking:write" checked>tracking:write</label>
+<label><input type="checkbox" value="tracking:read" checked>tracking:read</label>
+<label><input type="checkbox" value="reports:read" checked>reports:read</label>
+</div>
+<button id="login">Увійти через Keycloak</button>
+<button id="broker">Увійти через навчальний OIDC IdP</button>
+<button id="logout" disabled>Вийти</button>
+<p id="status" role="status">Немає активного access token</p>
+<small>Локально: user5 / User5-demo! — усі права; reader5 / Reader5-demo! — лише читання. Зовнішній для realm провайдер: upstream5 / Upstream5-demo! — читання.</small>
+</section>
+<section>
+<h2>2. Перевірити ресурси</h2>
+<label>ID користувача <input id="user" type="number" value="5" min="1"></label>
+<label>Тривалість, с <input id="duration" type="number" value="120" min="1"></label>
+<p>
+<button data-action="identity">JWT та видані scopes</button>
+<button data-action="profile">Отримати профіль</button>
+<button data-action="write">Додати сеанс</button>
+<button data-action="report">Отримати звіт</button>
+<button id="copy" disabled>Копіювати access token</button>
+</p>
+<label>ID сеансу <input id="session" type="text" placeholder="UUID із відповіді POST /sessions"></label>
+<button data-action="session">Отримати сеанс</button>
+<pre id="result" aria-live="polite">Відповіді API з’являться тут.</pre>
+<small>Токен зберігається лише в пам’яті вкладки. Після оновлення сторінки увійдіть знову. Копіюйте токен лише для локальних перевірок.</small>
+</section>
+<script src="/app.js" defer></script>
+</html>
