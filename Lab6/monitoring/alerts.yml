@@ -1,0 +1,18 @@
+groups:
+  - name: soa
+    rules:
+      - alert: NodeDown
+        expr: up{job="services"} == 0
+        for: 10s
+        labels: {severity: critical}
+        annotations: {summary: "Service {{ $labels.instance }} is down"}
+      - alert: HighLatency
+        expr: histogram_quantile(0.99, sum by (le, instance) (rate(http_duration_seconds_bucket[1m]))) > 1
+        for: 10s
+        labels: {severity: warning}
+        annotations: {summary: "p99 latency exceeds 1 second"}
+      - alert: ReplicationLag
+        expr: replication_lag_seconds > 5
+        for: 5s
+        labels: {severity: warning}
+        annotations: {summary: "Replica is more than 5 seconds behind primary"}

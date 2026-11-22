@@ -1,0 +1,57 @@
+{
+  "name": "SOA incident response",
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "Alertmanager webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        300,
+        300
+      ],
+      "webhookId": "soa-alert",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "soa-alert",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
+      "id": "ticket",
+      "name": "Create or update incident",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        580,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://incidents:8000/incidents",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Alertmanager webhook": {
+      "main": [
+        [
+          {
+            "node": "Create or update incident",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

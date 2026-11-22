@@ -1,0 +1,16 @@
+{
+  "alerts": [
+    {
+      "fingerprint": "manual-probe",
+      "status": "firing",
+      "labels": {
+        "alertname": "ManualProbe",
+        "severity": "info",
+        "instance": "manual-check"
+      },
+      "annotations": {
+        "summary": "Synthetic workflow transport check"
+      }
+    }
+  ]
+}

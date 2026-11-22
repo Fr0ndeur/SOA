@@ -1,0 +1,182 @@
+name: soa-lab6
+services:
+  rabbitmq:
+    image: rabbitmq:4.1.0-management
+    environment:
+      RABBITMQ_DEFAULT_USER: student
+      RABBITMQ_DEFAULT_PASS: student
+    ports:
+    - 127.0.0.1:15672:15672
+    volumes:
+    - rabbit-data:/var/lib/rabbitmq
+    healthcheck:
+      test:
+      - CMD
+      - rabbitmq-diagnostics
+      - -q
+      - ping
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  profiles:
+    build: ./backend
+    environment:
+      ROLE: profiles
+    volumes:
+    - profiles-data:/data
+  tracking:
+    build: ./backend
+    environment:
+      ROLE: tracking
+      RELIABLE: '1'
+      REPORT_QUEUES: reporting0,reporting1,replica0,replica1
+    volumes:
+    - tracking-data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+  gateway:
+    build: ./backend
+    environment:
+      ROLE: gateway
+      SHARDS: '2'
+    ports:
+    - 127.0.0.1:8080:8000
+    depends_on:
+    - profiles
+    - tracking
+    - reporting0
+    - reporting1
+  reporting0:
+    build: ./backend
+    environment:
+      ROLE: reporting
+      RELIABLE: '1'
+      SHARDS: '2'
+      SHARD: '0'
+      REPLICA: '0'
+      QUEUE: reporting0
+      REPORT_QUEUES: reporting0,reporting1,replica0,replica1
+    volumes:
+    - reporting0-data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+  replica0:
+    build: ./backend
+    environment:
+      ROLE: reporting
+      RELIABLE: '1'
+      SHARDS: '2'
+      SHARD: '0'
+      REPLICA: '1'
+      QUEUE: replica0
+      REPORT_QUEUES: reporting0,reporting1,replica0,replica1
+    volumes:
+    - replica0-data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+  reporting1:
+    build: ./backend
+    environment:
+      ROLE: reporting
+      RELIABLE: '1'
+      SHARDS: '2'
+      SHARD: '1'
+      REPLICA: '0'
+      QUEUE: reporting1
+      REPORT_QUEUES: reporting0,reporting1,replica0,replica1
+    volumes:
+    - reporting1-data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+  replica1:
+    build: ./backend
+    environment:
+      ROLE: reporting
+      RELIABLE: '1'
+      SHARDS: '2'
+      SHARD: '1'
+      REPLICA: '1'
+      QUEUE: replica1
+      REPORT_QUEUES: reporting0,reporting1,replica0,replica1
+    volumes:
+    - replica1-data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+  collector:
+    build: ./monitoring
+    depends_on:
+    - reporting0
+    - reporting1
+    - replica0
+    - replica1
+  incidents:
+    build: ./monitoring
+    command:
+    - uvicorn
+    - incidents:app
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8000'
+    ports:
+    - 127.0.0.1:8090:8000
+    volumes:
+    - incidents-data:/data
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    ports:
+    - 127.0.0.1:9090:9090
+    volumes:
+    - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+    - prometheus-data:/prometheus
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    ports:
+    - 127.0.0.1:9093:9093
+    volumes:
+    - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+  grafana:
+    image: grafana/grafana:11.6.0
+    ports:
+    - 127.0.0.1:3000:3000
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin-lab6
+    volumes:
+    - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    - ./monitoring/grafana/dashboard.json:/var/lib/grafana/dashboards/dashboard.json:ro
+    - grafana-data:/var/lib/grafana
+  n8n:
+    image: n8nio/n8n:1.82.3
+    ports:
+    - 127.0.0.1:5678:5678
+    environment:
+      N8N_SECURE_COOKIE: 'false'
+      N8N_DIAGNOSTICS_ENABLED: 'false'
+      WEBHOOK_URL: http://localhost:5678/
+    volumes:
+    - n8n-data:/home/node/.n8n
+volumes:
+  rabbit-data: null
+  profiles-data: null
+  tracking-data: null
+  reporting0-data: null
+  replica0-data: null
+  reporting1-data: null
+  replica1-data: null
+  incidents-data: null
+  prometheus-data: null
+  grafana-data: null
+  n8n-data: null
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 10.205.6.0/24
